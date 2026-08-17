@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GhostLane™ | Zero-Trace Automotive Radar & Navigation</title>
+  
+  <!-- Leaflet Map CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Top Telemetry HUD -->
+  <header id="top-hud">
+    <div class="hud-stat">
+      <span class="hud-label">SPEED</span>
+      <span id="stat-speed" class="hud-value">0 <small>MPH</small></span>
+    </div>
+    <div class="hud-stat">
+      <span class="hud-label">HEADING</span>
+      <span id="stat-heading" class="hud-value">0° <small>N</small></span>
+    </div>
+    <div class="hud-stat">
+      <span class="hud-label">PRIVACY SCORE</span>
+      <span id="stat-privacy" class="hud-value grade-a">100% (A+)</span>
+    </div>
+    <div class="hud-stat">
+      <span class="hud-label">CAMERAS IN RANGE</span>
+      <span id="stat-cams" class="hud-value">0</span>
+    </div>
+  </header>
+
+  <!-- Real-Time Optical Threat Alert Banner -->
+  <div id="threat-alert" class="alert-hidden">
+    <div class="alert-pulse-ring"></div>
+    <div class="alert-content">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-info">
+        <h4 id="alert-title">OPTICAL SURVEILLANCE INTERCEPT</h4>
+        <p id="alert-subtitle">Approaching ALPR Cone (500 ft)</p>
+      </div>
+      <div id="alert-countdown" class="alert-counter">--</div>
+    </div>
+  </div>
+
+  <!-- Main Map Canvas -->
+  <main id="map"></main>
+
+  <!-- Floating HUD Viewport Switcher (Bottom Nav) -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" data-tab="radar-view">
+      <span class="nav-icon">🛰️</span>
+      <span class="nav-label">Radar</span>
+    </button>
+    <button class="nav-btn" data-tab="routing-view">
+      <span class="nav-icon">🔀</span>
+      <span class="nav-label">Shadow Route</span>
+    </button>
+    <button class="nav-btn" data-tab="ledger-view">
+      <span class="nav-icon">📋</span>
+      <span class="nav-label">Ledger</span>
+    </button>
+    <button class="nav-btn" data-tab="verify-view">
+      <span class="nav-icon">📍</span>
+      <span class="nav-label">Log Node</span>
+    </button>
+  </nav>
+
+  <!-- Drawer View 1: Shadow Routing Panel -->
+  <section id="panel-routing" class="drawer-panel panel-hidden">
+    <div class="panel-header">
+      <h3>Shadow Routing Engine</h3>
+      <button class="btn-close" data-close="panel-routing">&times;</button>
+    </div>
+    <div class="panel-body">
+      <p class="panel-desc">Calculates lowest-exposure paths by penalizing roads inside active ALPR fields of view.</p>
+      
+      <div class="input-group">
+        <label>Origin</label>
+        <input type="text" id="route-start" placeholder="Current GPS Position" disabled>
+      </div>
+      <div class="input-group">
+        <label>Destination (Lat, Lon or Address)</label>
+        <input type="text" id="route-dest" placeholder="e.g. 35.4850, -97.5100">
+      </div>
+
+      <div class="route-mode-selector">
+        <label class="radio-label">
+          <input type="radio" name="route-mode" value="ghost" checked>
+          <span><strong>Ghost Route</strong> (Minimum Exposure)</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="route-mode" value="fastest">
+          <span><strong>Fastest Route</strong> (Direct / Standard)</span>
+        </label>
+      </div>
+
+      <button id="btn-calculate-route" class="btn btn-primary btn-block">Generate Navigation Vectors</button>
+
+      <div id="route-results" class="route-results-hidden">
+        <div class="result-card">
+          <div class="result-row">
+            <span>Route Distance:</span>
+            <strong id="res-distance">-- mi</strong>
+          </div>
+          <div class="result-row">
+            <span>Estimated Duration:</span>
+            <strong id="res-duration">-- min</strong>
+          </div>
+          <div class="result-row">
+            <span>Predicted Camera Intercepts:</span>
+            <strong id="res-intercepts" class="text-danger">0</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Drawer View 2: Commute Ledger Panel -->
+  <section id="panel-ledger" class="drawer-panel panel-hidden">
+    <div class="panel-header">
+      <h3>Daily Commute Ledger</h3>
+      <button class="btn-close" data-close="panel-ledger">&times;</button>
+    </div>
+    <div class="panel-body">
+      <div class="ledger-stats">
+        <div class="stat-card">
+          <span>Total Exposures</span>
+          <strong id="ledger-total-count">0</strong>
+        </div>
+        <div class="stat-card">
+          <span>Daily Grade</span>
+          <strong id="ledger-grade" class="grade-a">A+</strong>
+        </div>
+      </div>
+
+      <h4>Recent Capture Encounters</h4>
+      <ul id="ledger-list" class="ledger-items-list">
+        <li class="empty-state">No surveillance intercepts recorded today.</li>
+      </ul>
+
+      <button id="btn-clear-ledger" class="btn btn-secondary btn-block">Clear Local Ledger History</button>
+    </div>
+  </section>
+
+  <!-- Drawer View 3: Solar-Node Verification Modal -->
+  <section id="panel-verify" class="drawer-panel panel-hidden">
+    <div class="panel-header">
+      <h3>Solar-Node Verification Protocol</h3>
+      <button class="btn-close" data-close="panel-verify">&times;</button>
+    </div>
+    <div class="panel-body">
+      <p class="panel-desc">Pin and authenticate a physical camera installation to the local mesh database.</p>
+
+      <div class="input-group">
+        <label>Hardware Signature</label>
+        <select id="node-hardware">
+          <option value="Flock Falcon (Solar Pole)">Flock Falcon (Solar Pole)</option>
+          <option value="Flock Raven (Acoustic + Optical)">Flock Raven (Acoustic + Optical)</option>
+          <option value="Motorola Vigilant ALPR">Motorola / Vigilant Fixed ALPR</option>
+          <option value="Municipal Gantry Camera">Overhead Municipal Gantry</option>
+          <option value="Mobile Cruiser Mounted">Mobile Cruiser ALPR Bar</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Camera Lens Direction (Facing Heading)</label>
+        <select id="node-heading">
+          <option value="0">North (0°)</option>
+          <option value="45">North-East (45°)</option>
+          <option value="90">East (90°)</option>
+          <option value="135">South-East (135°)</option>
+          <option value="180">South (180°)</option>
+          <option value="225">South-West (225°)</option>
+          <option value="270">West (270°)</option>
+          <option value="315">North-West (315°)</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label>Capture Cone Angle (FOV Degrees)</label>
+        <input type="number" id="node-fov" value="60" min="30" max="120">
+      </div>
+
+      <div class="input-group">
+        <label>Capture Range (Feet)</label>
+        <input type="number" id="node-range" value="400" min="50" max="1000">
+      </div>
+
+      <div class="input-group">
+        <label>Location Target</label>
+        <select id="node-coords-mode">
+          <option value="current">Current GPS Coordinates</option>
+          <option value="center">Map Center Point</option>
+        </select>
+      </div>
+
+      <button id="btn-submit-node" class="btn btn-primary btn-block">Authenticate & Add to Node Mesh</button>
+    </div>
+  </section>
+
+  <!-- Quick Floating Action Buttons -->
+  <div id="quick-controls">
+    <button id="btn-toggle-radar" class="fab btn-radar-start" title="Toggle Live Radar">START RADAR</button>
+    <button id="btn-sync-mesh" class="fab fab-icon" title="Sync OpenStreetMap / DeFlock Mesh">🔄</button>
+    <button id="btn-recenter" class="fab fab-icon" title="Recenter Location">🎯</button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
