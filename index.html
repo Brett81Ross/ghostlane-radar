@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>GhostLane™ | Zero-Trace Automotive Radar & Navigation</title>
   
-  <!-- Leaflet Map CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css">
 </head>
@@ -47,7 +46,7 @@
   <!-- Main Map Canvas -->
   <main id="map"></main>
 
-  <!-- Floating HUD Viewport Switcher (Bottom Nav) -->
+  <!-- Floating HUD Viewport Switcher -->
   <nav id="bottom-nav">
     <button class="nav-btn active" data-tab="radar-view">
       <span class="nav-icon">🛰️</span>
@@ -134,12 +133,10 @@
           <strong id="ledger-grade" class="grade-a">A+</strong>
         </div>
       </div>
-
       <h4>Recent Capture Encounters</h4>
       <ul id="ledger-list" class="ledger-items-list">
         <li class="empty-state">No surveillance intercepts recorded today.</li>
       </ul>
-
       <button id="btn-clear-ledger" class="btn btn-secondary btn-block">Clear Local Ledger History</button>
     </div>
   </section>
@@ -207,7 +204,6 @@
     <button id="btn-recenter" class="fab fab-icon" title="Recenter Location">🎯</button>
   </div>
 
-  <!-- Scripts -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
