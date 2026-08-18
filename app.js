@@ -1,15 +1,14 @@
 // ==========================================================
-// GHOSTLANE CORE ENGINE: RADAR, VECTOR FOV & SHADOW ROUTING (IMPERIAL UNITS: FEET / MILES)
+// GHOSTLANE CORE ENGINE: RADAR, VECTOR FOV & SHADOW ROUTING (FEET / MILES)
 // ==========================================================
 
-// Application State
 const state = {
   map: null,
   userMarker: null,
   cameraLayer: null,
   routeLayer: null,
   watchId: null,
-  position: null, // { lat, lon, heading, speed }
+  position: null,
   cameras: [],
   activeThreat: null,
   lastWarningTime: 0,
@@ -17,13 +16,10 @@ const state = {
   audioCtx: null
 };
 
-// Unit Conversion Constants
 const METERS_TO_FEET = 3.28084;
 const METERS_TO_MILES = 0.000621371;
 
-// ==========================================================
-// 1. AUDIO SYNTHESIS RADAR TONES & TTS
-// ==========================================================
+// Audio & TTS
 function initAudioEngine() {
   if (!state.audioCtx) {
     state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -61,11 +57,9 @@ function speakVoiceAlert(phrase) {
   }
 }
 
-// ==========================================================
-// 2. VECTOR MATHEMATICS & FOV CONE GENERATION (FEET)
-// ==========================================================
+// Math & Geolocation (Imperial)
 function getDistanceFeet(lat1, lon1, lat2, lon2) {
-  const R_FEET = 20902231; // Mean radius of Earth in feet
+  const R_FEET = 20902231;
   const rad = Math.PI / 180;
   const dLat = (lat2 - lat1) * rad;
   const dLon = (lon2 - lon1) * rad;
@@ -84,7 +78,6 @@ function getAzimuth(lat1, lon1, lat2, lon2) {
   return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
 }
 
-// Generates an FOV capture polygon for Leaflet using range in feet
 function computeFovPolygonPoints(lat, lon, headingDeg, fovDeg, distanceFeet = 400) {
   const points = [[lat, lon]];
   const halfFov = fovDeg / 2;
@@ -102,18 +95,16 @@ function computeFovPolygonPoints(lat, lon, headingDeg, fovDeg, distanceFeet = 40
   return points;
 }
 
-// ==========================================================
-// 3. MAP INITIALIZATION & MESH RENDERING
-// ==========================================================
+// Map Initialization
 function initMap() {
   state.map = L.map('map', {
-    center: [35.4676, -97.5164], // Oklahoma City
+    center: [35.4676, -97.5164],
     zoom: 14,
     zoomControl: false
   });
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    attribution: '&copy; OSM &copy; CARTO',
     maxZoom: 19
   }).addTo(state.map);
 
@@ -128,7 +119,6 @@ function renderCameraNodes() {
   state.cameraLayer.clearLayers();
 
   state.cameras.forEach(cam => {
-    // Draw Optical FOV Capture Cone in feet
     const fovCoords = computeFovPolygonPoints(cam.lat, cam.lon, cam.heading, cam.fov || 60, cam.range || 400);
     L.polygon(fovCoords, {
       color: '#ef4444',
@@ -137,16 +127,9 @@ function renderCameraNodes() {
       fillOpacity: 0.18
     }).addTo(state.cameraLayer);
 
-    // Draw Camera Marker
     const icon = L.divIcon({
       className: 'cam-marker',
-      html: `<div style="
-        width: 12px; height: 12px;
-        background: #ef4444;
-        border: 2px solid #ffffff;
-        border-radius: 50%;
-        box-shadow: 0 0 8px #ef4444;
-      "></div>`,
+      html: `<div style="width: 12px; height: 12px; background: #ef4444; border: 2px solid #ffffff; border-radius: 50%; box-shadow: 0 0 8px #ef4444;"></div>`,
       iconSize: [12, 12],
       iconAnchor: [6, 6]
     });
@@ -166,9 +149,7 @@ function renderCameraNodes() {
   document.getElementById('stat-cams').textContent = state.cameras.length;
 }
 
-// ==========================================================
-// 4. OPENSTREETMAP OVERPASS DATA SYNC
-// ==========================================================
+// Network Sync (Overpass API)
 async function syncMeshCameras(lat, lon, radiusMiles = 5) {
   const radiusMeters = Math.round(radiusMiles * 1609.34);
   const query = `
@@ -176,7 +157,6 @@ async function syncMeshCameras(lat, lon, radiusMiles = 5) {
     (
       node["man_made"="surveillance"]["surveillance:type"="ALPR"](around:${radiusMeters},${lat},${lon});
       node["surveillance:type"="ALPR"](around:${radiusMeters},${lat},${lon});
-      node["surveillance"="public"](around:${radiusMeters},${lat},${lon});
     );
     out body;
   `;
@@ -184,7 +164,7 @@ async function syncMeshCameras(lat, lon, radiusMiles = 5) {
 
   try {
     const res = await fetch(url);
-    if (!res.ok) throw new Error('Overpass API returned status ' + res.status);
+    if (!res.ok) throw new Error('Overpass API Error');
     const data = await res.json();
 
     const fetched = data.elements.map(el => {
@@ -198,7 +178,7 @@ async function syncMeshCameras(lat, lon, radiusMiles = 5) {
         lon: el.lon,
         heading: heading,
         fov: 60,
-        range: 400, // 400 feet capture buffer
+        range: 400,
         hardware: (el.tags && el.tags.operator) || 'Flock / ALPR Node',
         source: 'OSM Verified'
       };
@@ -217,14 +197,12 @@ async function syncMeshCameras(lat, lon, radiusMiles = 5) {
   }
 }
 
-// ==========================================================
-// 5. DIRECTIONAL PROXIMITY RADAR DETECTION (FEET)
-// ==========================================================
+// Radar Engine
 function evaluateDirectionalAlerts() {
   if (!state.position || state.cameras.length === 0) return;
 
   const { lat, lon, heading, speed } = state.position;
-  const alertThresholdFeet = 1000; // Alert within 1,000 feet
+  const alertThresholdFeet = 1000;
   const now = Date.now();
 
   let closestIntercept = null;
@@ -237,11 +215,9 @@ function evaluateDirectionalAlerts() {
       const bearingToCamera = getAzimuth(lat, lon, cam.lat, cam.lon);
       const bearingToDriver = getAzimuth(cam.lat, cam.lon, lat, lon);
 
-      // Check 1: Approach angle (±45° trajectory cone)
       let approachAngleDiff = Math.abs(heading - bearingToCamera);
       if (approachAngleDiff > 180) approachAngleDiff = 360 - approachAngleDiff;
 
-      // Check 2: Within camera's FOV
       let lensAngleDiff = Math.abs(cam.heading - bearingToDriver);
       if (lensAngleDiff > 180) lensAngleDiff = 360 - lensAngleDiff;
 
@@ -276,9 +252,7 @@ function evaluateDirectionalAlerts() {
   }
 }
 
-// ==========================================================
-// 6. SHADOW ROUTING (MILES / FEET PENALTIES)
-// ==========================================================
+// Shadow Routing
 async function calculateShadowRoute(destCoords, mode = 'ghost') {
   if (!state.position) {
     alert('Active GPS fix required for shadow route calculation.');
@@ -297,7 +271,6 @@ async function calculateShadowRoute(destCoords, mode = 'ghost') {
     const primaryRoute = data.routes[0];
     const coordinates = primaryRoute.geometry.coordinates;
 
-    // Calculate intercepts within 200 feet corridor
     let intercepts = 0;
     coordinates.forEach(coord => {
       const [rLon, rLat] = coord;
@@ -309,19 +282,12 @@ async function calculateShadowRoute(destCoords, mode = 'ghost') {
     });
 
     state.routeLayer.clearLayers();
-
     const leafletCoords = coordinates.map(c => [c[1], c[0]]);
     const routeColor = mode === 'ghost' ? '#38bdf8' : '#94a3b8';
 
-    L.polyline(leafletCoords, {
-      color: routeColor,
-      weight: 6,
-      opacity: 0.85
-    }).addTo(state.routeLayer);
-
+    L.polyline(leafletCoords, { color: routeColor, weight: 6, opacity: 0.85 }).addTo(state.routeLayer);
     state.map.fitBounds(L.polyline(leafletCoords).getBounds(), { padding: [50, 50] });
 
-    // Output Route Telemetry in Miles
     const totalMiles = (primaryRoute.distance * METERS_TO_MILES).toFixed(1);
     document.getElementById('route-results').classList.remove('route-results-hidden');
     document.getElementById('res-distance').textContent = `${totalMiles} mi`;
@@ -333,9 +299,7 @@ async function calculateShadowRoute(destCoords, mode = 'ghost') {
   }
 }
 
-// ==========================================================
-// 7. COMMUTE LEDGER & EXPOSURE INDEX
-// ==========================================================
+// Ledger & Storage
 function logLedgerEntry(camera) {
   const entry = {
     id: `log-${Date.now()}`,
@@ -344,7 +308,6 @@ function logLedgerEntry(camera) {
     lat: camera.lat.toFixed(4),
     lon: camera.lon.toFixed(4)
   };
-
   state.ledger.unshift(entry);
   if (state.ledger.length > 50) state.ledger.pop();
   localStorage.setItem('ghostlane_ledger', JSON.stringify(state.ledger));
@@ -355,25 +318,14 @@ function updateLedgerDisplay() {
   const count = state.ledger.length;
   document.getElementById('ledger-total-count').textContent = count;
 
-  let grade = 'A+';
-  let gradeClass = 'grade-a';
+  let grade = count > 8 ? 'F' : count > 3 ? 'C' : 'A+';
+  let gradeClass = count > 8 ? 'grade-f' : count > 3 ? 'grade-c' : 'grade-a';
 
-  if (count > 8) {
-    grade = 'F';
-    gradeClass = 'grade-f';
-  } else if (count > 3) {
-    grade = 'C';
-    gradeClass = 'grade-c';
-  }
-
-  const statPrivacy = document.getElementById('stat-privacy');
-  statPrivacy.textContent = grade;
-  statPrivacy.className = `hud-value ${gradeClass}`;
-
-  const ledgerGrade = document.getElementById('ledger-grade');
-  if (ledgerGrade) {
-    ledgerGrade.textContent = grade;
-    ledgerGrade.className = gradeClass;
+  document.getElementById('stat-privacy').textContent = grade;
+  document.getElementById('stat-privacy').className = `hud-value ${gradeClass}`;
+  if (document.getElementById('ledger-grade')) {
+    document.getElementById('ledger-grade').textContent = grade;
+    document.getElementById('ledger-grade').className = gradeClass;
   }
 
   const listEl = document.getElementById('ledger-list');
@@ -394,9 +346,6 @@ function updateLedgerDisplay() {
   }
 }
 
-// ==========================================================
-// 8. STORAGE & TELEMETRY LISTENERS
-// ==========================================================
 function saveStoredCameras() {
   localStorage.setItem('ghostlane_nodes', JSON.stringify(state.cameras));
 }
@@ -439,23 +388,14 @@ function toggleLiveRadar() {
       const speedMph = speed ? Math.round(speed * 2.23694) : 0;
       const currentHeading = heading !== null && !isNaN(heading) ? Math.round(heading) : 0;
 
-      state.position = {
-        lat: latitude,
-        lon: longitude,
-        heading: currentHeading,
-        speed: speed || 0
-      };
+      state.position = { lat: latitude, lon: longitude, heading: currentHeading, speed: speed || 0 };
 
       document.getElementById('stat-speed').innerHTML = `${speedMph} <small>MPH</small>`;
       document.getElementById('stat-heading').innerHTML = `${currentHeading}°`;
 
       if (!state.userMarker) {
         state.userMarker = L.circleMarker([latitude, longitude], {
-          radius: 8,
-          fillColor: '#38bdf8',
-          color: '#ffffff',
-          weight: 2,
-          fillOpacity: 1
+          radius: 8, fillColor: '#38bdf8', color: '#ffffff', weight: 2, fillOpacity: 1
         }).addTo(state.map);
         state.map.setView([latitude, longitude], 15);
       } else {
@@ -469,24 +409,19 @@ function toggleLiveRadar() {
   );
 }
 
-// ==========================================================
-// 9. EVENT BINDINGS & UI INITIALIZATION
-// ==========================================================
+// UI Event Binding
 document.addEventListener('DOMContentLoaded', () => {
   initMap();
 
   document.getElementById('btn-toggle-radar').addEventListener('click', toggleLiveRadar);
-
   document.getElementById('btn-sync-mesh').addEventListener('click', () => {
     const center = state.position ? state.position : state.map.getCenter();
-    syncMeshCameras(center.lat, center.lon || center.lng, 5); // 5-mile radius
+    syncMeshCameras(center.lat, center.lon || center.lng, 5);
   });
-
   document.getElementById('btn-recenter').addEventListener('click', () => {
     if (state.position) state.map.setView([state.position.lat, state.position.lon], 16);
   });
 
-  // Navigation Panel Switching
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -494,14 +429,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       btn.classList.add('active');
       const tab = btn.getAttribute('data-tab');
-
       if (tab === 'routing-view') document.getElementById('panel-routing').classList.remove('panel-hidden');
       if (tab === 'ledger-view') document.getElementById('panel-ledger').classList.remove('panel-hidden');
       if (tab === 'verify-view') document.getElementById('panel-verify').classList.remove('panel-hidden');
     });
   });
 
-  // Panel Close Buttons
   document.querySelectorAll('.btn-close').forEach(btn => {
     btn.addEventListener('click', () => {
       const panelId = btn.getAttribute('data-close');
@@ -511,23 +444,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Shadow Routing Execution
   document.getElementById('btn-calculate-route').addEventListener('click', () => {
     const destInput = document.getElementById('route-dest').value.trim();
-    if (!destInput) {
-      alert('Enter a valid destination (e.g. 35.4850, -97.5100).');
-      return;
-    }
+    if (!destInput) return alert('Enter a valid destination.');
     const parts = destInput.split(',').map(s => parseFloat(s.trim()));
-    if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) {
-      alert('Format must be: Latitude, Longitude');
-      return;
-    }
+    if (parts.length !== 2 || isNaN(parts[0]) || isNaN(parts[1])) return alert('Format must be: Latitude, Longitude');
     const mode = document.querySelector('input[name="route-mode"]:checked').value;
     calculateShadowRoute({ lat: parts[0], lon: parts[1] }, mode);
   });
 
-  // Submit New Verified Node
   document.getElementById('btn-submit-node').addEventListener('click', () => {
     const hardware = document.getElementById('node-hardware').value;
     const heading = parseInt(document.getElementById('node-heading').value, 10);
@@ -545,27 +470,17 @@ document.addEventListener('DOMContentLoaded', () => {
       targetLon = center.lng;
     }
 
-    const newNode = {
-      id: `custom-${Date.now()}`,
-      lat: targetLat,
-      lon: targetLon,
-      heading: heading,
-      fov: fov,
-      range: range,
-      hardware: hardware,
-      source: 'Community Verified'
-    };
+    state.cameras.push({
+      id: `custom-${Date.now()}`, lat: targetLat, lon: targetLon, heading, fov, range, hardware, source: 'Community Verified'
+    });
 
-    state.cameras.push(newNode);
     saveStoredCameras();
     renderCameraNodes();
-
     document.getElementById('panel-verify').classList.add('panel-hidden');
     document.querySelector('[data-tab="radar-view"]').classList.add('active');
     alert('Node authenticated and written to local mesh!');
   });
 
-  // Clear Ledger History
   document.getElementById('btn-clear-ledger').addEventListener('click', () => {
     state.ledger = [];
     localStorage.removeItem('ghostlane_ledger');
