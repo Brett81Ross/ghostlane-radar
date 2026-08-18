@@ -34,7 +34,7 @@
     header {
       background: #080d1a;
       border-bottom: 1px solid rgba(56, 189, 248, 0.15);
-      padding: max(6px, env(safe-area-inset-top)) 12px 6px 12px;
+      padding: max(8px, env(safe-area-inset-top)) 14px 8px 14px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -45,28 +45,28 @@
     .brand-group {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
     .brand-logo {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
       object-fit: cover;
       border: 1.5px solid #38bdf8;
-      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.4);
       background: #0b1120;
     }
 
     .brand-title {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 800;
       color: #ffffff;
       letter-spacing: 0.5px;
     }
 
     .brand-subtitle {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: #94a3b8;
       font-weight: 500;
     }
@@ -77,7 +77,7 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      padding: 8px 4px;
+      padding: 10px 4px;
       z-index: 1050;
       flex-shrink: 0;
       backdrop-filter: blur(10px);
@@ -93,16 +93,16 @@
     }
 
     .hud-stat-label {
-      font-size: 0.58rem;
+      font-size: 0.6rem;
       color: #64748b;
       text-transform: uppercase;
       font-weight: 800;
       letter-spacing: 0.5px;
-      margin-bottom: 2px;
+      margin-bottom: 4px;
     }
 
     .hud-stat-value {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 900;
       color: #38bdf8;
       line-height: 1.1;
@@ -130,11 +130,11 @@
     .floating-actions {
       position: absolute;
       right: 14px;
-      bottom: 20px;
+      bottom: 24px;
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 12px;
+      gap: 14px;
       z-index: 1000;
       pointer-events: auto;
     }
@@ -143,7 +143,7 @@
       background: #38bdf8;
       color: #030712;
       border: none;
-      padding: 12px 22px;
+      padding: 14px 24px;
       border-radius: 30px;
       font-size: 0.85rem;
       font-weight: 900;
@@ -168,16 +168,16 @@
     }
 
     .btn-circle {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       border-radius: 50%;
       background: #1e293b;
       border: 1px solid rgba(56, 189, 248, 0.3);
-      color: #38bdf8;
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       cursor: pointer;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
       touch-action: manipulation;
@@ -191,7 +191,6 @@
     .btn-circle.target-btn {
       background: #172554;
       border-color: #ef4444;
-      color: #f87171;
     }
 
     /* Bottom Navigation Bar */
@@ -200,7 +199,7 @@
       border-top: 1px solid rgba(56, 189, 248, 0.15);
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+      padding: 8px 0 max(8px, env(safe-area-inset-bottom));
       z-index: 1100;
       flex-shrink: 0;
     }
@@ -210,17 +209,17 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
+      gap: 4px;
       color: #64748b;
-      font-size: 0.68rem;
+      font-size: 0.7rem;
       font-weight: 700;
       text-decoration: none;
       cursor: pointer;
-      padding: 4px 0;
+      padding: 6px 0;
     }
 
     .nav-tab .tab-icon {
-      font-size: 1.15rem;
+      font-size: 1.25rem;
     }
 
     .nav-tab.active {
@@ -235,14 +234,14 @@
       color: #ef4444;
     }
 
-    /* Custom Leaflet Markers */
+    /* Custom Map Markers */
     .camera-glow-marker {
-      width: 22px;
-      height: 22px;
+      width: 24px;
+      height: 24px;
       background: rgba(239, 68, 68, 0.2);
       border: 2px solid #ef4444;
       border-radius: 50%;
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.8), inset 0 0 6px #ef4444;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.8), inset 0 0 6px #ef4444;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -258,10 +257,11 @@
     .user-arrow-puck {
       width: 0;
       height: 0;
-      border-left: 9px solid transparent;
-      border-right: 9px solid transparent;
-      border-bottom: 20px solid #38bdf8;
-      filter: drop-shadow(0 0 8px #38bdf8);
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 22px solid #38bdf8;
+      filter: drop-shadow(0 0 10px #38bdf8);
+      transform-origin: center center;
     }
   </style>
 </head>
@@ -270,7 +270,7 @@
   <!-- Top Brand Header Bar -->
   <header>
     <div class="brand-group">
-      <img src="logo-gl.png" alt="GL Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/32/080d1a/38bdf8?text=GL'">
+      <img src="logo-gl.png" alt="GhostLane Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/36/080d1a/38bdf8?text=GL'">
       <div>
         <span class="brand-title">GhostLane™</span>
         <span class="brand-subtitle"> | Zero-Trace Automotive Radar & Navigation</span>
@@ -294,7 +294,7 @@
     </div>
     <div class="hud-stat-cell">
       <div class="hud-stat-label">CAMERAS IN RANGE</div>
-      <div class="hud-stat-value" id="stat-cameras">134</div>
+      <div class="hud-stat-value" id="stat-cameras">0</div>
     </div>
   </div>
 
@@ -308,7 +308,7 @@
         <span id="radar-btn-text">START RADAR</span>
       </button>
 
-      <button class="btn-circle" onclick="refreshEvasionRoute()" title="Recalculate Route">
+      <button class="btn-circle" onclick="refreshEvasionRoute()" title="Refresh Network">
         <span>🔁</span>
       </button>
 
@@ -359,17 +359,19 @@
       }
     }
 
-    // Default Coordinates (Oklahoma City Metro - Centered over Lake Stanley Draper / Downtown area)
-    let userCoords = [35.3450, -97.4350];
+    // State Variables
+    let userCoords = [35.4676, -97.5164];
     let isRadarActive = false;
     let logNodeMode = false;
     let userMarker = null;
+    let cameraLocations = JSON.parse(localStorage.getItem('ghostlane_nodes')) || [];
+    let initialDiscoveryRun = false;
 
     // Initialize Map with High-Contrast Dark Tiles
     const map = L.map('map', {
       zoomControl: false,
       attributionControl: false
-    }).setView([35.4676, -97.5164], 11);
+    }).setView(userCoords, 11);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 19,
@@ -383,7 +385,7 @@
       L.DomEvent.disableScrollPropagation(floatControls);
     }
 
-    // User Location Puck (Blue Triangle Directional Pointer)
+    // User Location Puck (Blue Triangle Pointer)
     const puckIcon = L.divIcon({
       className: 'user-puck-wrapper',
       html: '<div class="user-arrow-puck" id="user-arrow"></div>',
@@ -391,48 +393,69 @@
     });
     userMarker = L.marker(userCoords, { icon: puckIcon }).addTo(map);
 
-    // Generate 134 Realistic Camera Clusters Across Oklahoma City Metro (Bethany, Downtown, Midwest City, Moore)
-    const cameraLocations = [];
-    const basePoints = [
-      { lat: 35.4676, lng: -97.5164, count: 48, spread: 0.055 }, // Downtown OKC
-      { lat: 35.5053, lng: -97.6406, count: 26, spread: 0.035 }, // Bethany
-      { lat: 35.4495, lng: -97.3967, count: 28, spread: 0.038 }, // Midwest City
-      { lat: 35.3395, lng: -97.4867, count: 32, spread: 0.032 }  // Moore
-    ];
-
-    basePoints.forEach(bp => {
-      for (let i = 0; i < bp.count; i++) {
-        const offsetLat = (Math.random() - 0.5) * bp.spread * 2;
-        const offsetLng = (Math.random() - 0.5) * bp.spread * 2;
-        cameraLocations.push({
-          lat: bp.lat + offsetLat,
-          lng: bp.lng + offsetLng,
-          id: `ALPR-${Math.floor(1000 + Math.random() * 9000)}`
-        });
-      }
-    });
-
-    // Render Camera Rings
+    const cameraLayerGroup = L.layerGroup().addTo(map);
     const cameraIcon = L.divIcon({
       className: 'cam-marker-wrapper',
       html: '<div class="camera-glow-marker"><div class="camera-glow-core"></div></div>',
-      iconSize: [22, 22]
+      iconSize: [24, 24]
     });
 
-    const cameraLayerGroup = L.layerGroup().addTo(map);
-
+    // Render Camera Nodes to Map
     function renderCameraNodes() {
       cameraLayerGroup.clearLayers();
       cameraLocations.forEach(cam => {
         L.marker([cam.lat, cam.lng], { icon: cameraIcon })
-          .bindPopup(`<b>${cam.id}</b><br><span style="color:#ef4444;font-weight:bold;">Flock ALPR Surveillance Node</span>`)
+          .bindPopup(`<b>${cam.name || 'ALPR Node'}</b><br><span style="color:#ef4444;font-weight:bold;">Optical Surveillance Trap</span>`)
           .addTo(cameraLayerGroup);
       });
       document.getElementById('stat-cameras').innerText = cameraLocations.length;
     }
+
+    // REAL-TIME DISCOVERY ENGINE: Fetch actual OpenStreetMap ALPR / Surveillance data
+    async function discoverCamerasRealTime(lat, lng) {
+      const radius = 25000; // 25km search radius
+      const query = `
+        [out:json][timeout:15];
+        (
+          node["man_made"="surveillance"](around:${radius},${lat},${lng});
+          node["camera:type"="ALPR"](around:${radius},${lat},${lng});
+        );
+        out body;
+      `;
+      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        let newCount = 0;
+        data.elements.forEach(el => {
+          const exists = cameraLocations.find(c => c.id === el.id);
+          if (!exists) {
+            cameraLocations.push({
+              lat: el.lat,
+              lng: el.lon,
+              id: el.id,
+              name: (el.tags && el.tags.name) ? el.tags.name : "Real-Time Flock/ALPR Node"
+            });
+            newCount++;
+          }
+        });
+        
+        if (newCount > 0) {
+          renderCameraNodes();
+          localStorage.setItem('ghostlane_nodes', JSON.stringify(cameraLocations));
+          if (isRadarActive) playPing(1000, 'sine', 0.2);
+        }
+      } catch (e) {
+        console.error("Real-time Overpass API discovery failed: ", e);
+      }
+    }
+
+    // Render any locally saved nodes on startup
     renderCameraNodes();
 
-    // Live Geolocation
+    // Live Geolocation Tracking & Auto-Discovery Trigger
     if ("geolocation" in navigator) {
       navigator.geolocation.watchPosition(
         (pos) => {
@@ -447,9 +470,16 @@
 
           if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
             const h = Math.round(pos.coords.heading);
-            document.getElementById('stat-heading').innerHTML = `${h}° <span style="font-size:0.65rem;">DIR</span>`;
+            document.getElementById('stat-heading').innerHTML = `${h}° <span style="font-size:0.65rem;">N</span>`;
             const arrow = document.getElementById('user-arrow');
             if (arrow) arrow.style.transform = `rotate(${h}deg)`;
+          }
+
+          // Run Real-Time Discovery once when initial GPS locks
+          if (!initialDiscoveryRun) {
+            discoverCamerasRealTime(userCoords[0], userCoords[1]);
+            map.setView(userCoords, 11);
+            initialDiscoveryRun = true;
           }
 
           if (isRadarActive) {
@@ -459,17 +489,22 @@
         (err) => console.log("GPS Location unavailable:", err.message),
         { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
       );
+    } else {
+       // Fallback discovery if GPS watch fails
+       discoverCamerasRealTime(userCoords[0], userCoords[1]);
     }
 
+    // Radar Proximity Alert Check
     function checkRadarProximity(pos) {
       cameraLocations.forEach(cam => {
         const d = map.distance(pos, [cam.lat, cam.lng]);
-        if (d < 180) { // Near camera
+        if (d < 180) { // ~600ft warning radius
           playPing(440, 'sawtooth', 0.15);
         }
       });
     }
 
+    // UI Buttons
     function toggleRadarMode() {
       isRadarActive = !isRadarActive;
       const btn = document.getElementById('radar-toggle-btn');
@@ -495,7 +530,8 @@
 
     function refreshEvasionRoute() {
       playPing(1200, 'triangle', 0.18);
-      alert("GhostLane: Recalculating zero-trace shadow vectors around active surveillance clusters.");
+      discoverCamerasRealTime(userCoords[0], userCoords[1]); // Re-trigger live discovery
+      alert("GhostLane: Syncing live surveillance data from open networks...");
     }
 
     // Tap Map to Add Camera when Log Node Tab is Active
@@ -504,11 +540,13 @@
         cameraLocations.push({
           lat: e.latlng.lat,
           lng: e.latlng.lng,
-          id: `FLOCK-${Math.floor(1000 + Math.random() * 9000)}`
+          id: `MANUAL-${Math.floor(1000 + Math.random() * 9000)}`,
+          name: "Manual Logged Node"
         });
+        localStorage.setItem('ghostlane_nodes', JSON.stringify(cameraLocations));
         renderCameraNodes();
         playPing(800, 'square', 0.12);
-        alert("Optical surveillance node logged to local mesh.");
+        alert("Optical surveillance node logged to your local ledger.");
       }
     });
 
@@ -520,11 +558,11 @@
       logNodeMode = (tabId === 'log');
 
       if (tabId === 'shadow') {
-        alert("Shadow Route Mode: Auto-evasion active across all 134 grid nodes.");
+        alert("Shadow Route Engine Active: Monitoring surveillance choke-points.");
       } else if (tabId === 'ledger') {
-        alert(`Surveillance Ledger: ${cameraLocations.length} optical traps currently cataloged.`);
+        alert(`Surveillance Ledger: ${cameraLocations.length} total nodes actively cataloged.`);
       } else if (tabId === 'log') {
-        alert("Log Node Mode: Tap anywhere on the map to mark a new camera.");
+        alert("Log Node Mode: Tap anywhere on the map to permanently mark a new camera.");
       }
     }
   </script>
