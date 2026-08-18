@@ -1,0 +1,6 @@
+{
+  "routes": [
+    { "src": "/api/analyze", "destination": "/api/analyze.js" },
+    { "src": "/(.*)", "destination": "/index.html" }
+  ]
+}
