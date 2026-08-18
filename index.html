@@ -2,209 +2,531 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>GhostLane™ | Zero-Trace Automotive Radar & Navigation</title>
   
+  <!-- Leaflet Map CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      height: 100%;
+      height: 100dvh;
+      width: 100vw;
+      overflow: hidden;
+      background-color: #06080e;
+      color: #f8fafc;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Brand Header Bar */
+    header {
+      background: #080d1a;
+      border-bottom: 1px solid rgba(56, 189, 248, 0.15);
+      padding: max(6px, env(safe-area-inset-top)) 12px 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 1100;
+      flex-shrink: 0;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid #38bdf8;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.4);
+      background: #0b1120;
+    }
+
+    .brand-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-subtitle {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    /* Top Telemetry Metric HUD */
+    .top-hud-bar {
+      background: rgba(11, 17, 32, 0.95);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 8px 4px;
+      z-index: 1050;
+      flex-shrink: 0;
+      backdrop-filter: blur(10px);
+    }
+
+    .hud-stat-cell {
+      text-align: center;
+      border-right: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .hud-stat-cell:last-child {
+      border-right: none;
+    }
+
+    .hud-stat-label {
+      font-size: 0.58rem;
+      color: #64748b;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .hud-stat-value {
+      font-size: 1rem;
+      font-weight: 900;
+      color: #38bdf8;
+      line-height: 1.1;
+    }
+
+    .hud-stat-value.score-green {
+      color: #4ade80;
+    }
+
+    /* Map Interface */
+    #map-wrapper {
+      flex: 1;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
+      background: #05070d;
+    }
+
+    /* Floating Right Side Action Controls */
+    .floating-actions {
+      position: absolute;
+      right: 14px;
+      bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 12px;
+      z-index: 1000;
+      pointer-events: auto;
+    }
+
+    .btn-start-radar {
+      background: #38bdf8;
+      color: #030712;
+      border: none;
+      padding: 12px 22px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(56, 189, 248, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: uppercase;
+      touch-action: manipulation;
+    }
+
+    .btn-start-radar.active {
+      background: #ef4444;
+      color: #ffffff;
+      box-shadow: 0 4px 18px rgba(239, 68, 68, 0.5);
+    }
+
+    .btn-start-radar:active {
+      transform: scale(0.96);
+    }
+
+    .btn-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+      touch-action: manipulation;
+    }
+
+    .btn-circle:active {
+      transform: scale(0.94);
+      background: #334155;
+    }
+
+    .btn-circle.target-btn {
+      background: #172554;
+      border-color: #ef4444;
+      color: #f87171;
+    }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      background: #080d1a;
+      border-top: 1px solid rgba(56, 189, 248, 0.15);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+      z-index: 1100;
+      flex-shrink: 0;
+    }
+
+    .nav-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      color: #64748b;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+      padding: 4px 0;
+    }
+
+    .nav-tab .tab-icon {
+      font-size: 1.15rem;
+    }
+
+    .nav-tab.active {
+      color: #38bdf8;
+    }
+
+    .nav-tab.tab-orange.active {
+      color: #f97316;
+    }
+
+    .nav-tab.tab-red.active {
+      color: #ef4444;
+    }
+
+    /* Custom Leaflet Markers */
+    .camera-glow-marker {
+      width: 22px;
+      height: 22px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 2px solid #ef4444;
+      border-radius: 50%;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.8), inset 0 0 6px #ef4444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .camera-glow-core {
+      width: 6px;
+      height: 6px;
+      background: #ffffff;
+      border-radius: 50%;
+    }
+
+    .user-arrow-puck {
+      width: 0;
+      height: 0;
+      border-left: 9px solid transparent;
+      border-right: 9px solid transparent;
+      border-bottom: 20px solid #38bdf8;
+      filter: drop-shadow(0 0 8px #38bdf8);
+    }
+  </style>
 </head>
 <body>
 
-  <!-- Top Telemetry HUD -->
-  <header id="top-hud">
-    <div class="hud-stat">
-      <span class="hud-label">SPEED</span>
-      <span id="stat-speed" class="hud-value">0 <small>MPH</small></span>
-    </div>
-    <div class="hud-stat">
-      <span class="hud-label">HEADING</span>
-      <span id="stat-heading" class="hud-value">0° <small>N</small></span>
-    </div>
-    <div class="hud-stat">
-      <span class="hud-label">PRIVACY SCORE</span>
-      <span id="stat-privacy" class="hud-value grade-a">100% (A+)</span>
-    </div>
-    <div class="hud-stat">
-      <span class="hud-label">CAMERAS IN RANGE</span>
-      <span id="stat-cams" class="hud-value">0</span>
+  <!-- Top Brand Header Bar -->
+  <header>
+    <div class="brand-group">
+      <img src="logo-gl.png" alt="GL Logo" class="brand-logo" onerror="this.src='https://via.placeholder.com/32/080d1a/38bdf8?text=GL'">
+      <div>
+        <span class="brand-title">GhostLane™</span>
+        <span class="brand-subtitle"> | Zero-Trace Automotive Radar & Navigation</span>
+      </div>
     </div>
   </header>
 
-  <!-- Real-Time Optical Threat Alert Banner -->
-  <div id="threat-alert" class="alert-hidden">
-    <div class="alert-pulse-ring"></div>
-    <div class="alert-content">
-      <div class="alert-icon">⚠️</div>
-      <div class="alert-info">
-        <h4 id="alert-title">OPTICAL SURVEILLANCE INTERCEPT</h4>
-        <p id="alert-subtitle">Approaching ALPR Cone (500 ft)</p>
-      </div>
-      <div id="alert-countdown" class="alert-counter">--</div>
+  <!-- Top Telemetry Metric HUD -->
+  <div class="top-hud-bar">
+    <div class="hud-stat-cell">
+      <div class="hud-stat-label">SPEED</div>
+      <div class="hud-stat-value" id="stat-speed">0 <span style="font-size:0.65rem;">MPH</span></div>
+    </div>
+    <div class="hud-stat-cell">
+      <div class="hud-stat-label">HEADING</div>
+      <div class="hud-stat-value" id="stat-heading">0° <span style="font-size:0.65rem;">N</span></div>
+    </div>
+    <div class="hud-stat-cell">
+      <div class="hud-stat-label">PRIVACY SCORE</div>
+      <div class="hud-stat-value score-green" id="stat-score">A+</div>
+    </div>
+    <div class="hud-stat-cell">
+      <div class="hud-stat-label">CAMERAS IN RANGE</div>
+      <div class="hud-stat-value" id="stat-cameras">134</div>
     </div>
   </div>
 
-  <!-- Main Map Canvas -->
-  <main id="map"></main>
+  <!-- Map Canvas -->
+  <div id="map-wrapper">
+    <div id="map"></div>
 
-  <!-- Floating HUD Viewport Switcher -->
-  <nav id="bottom-nav">
-    <button class="nav-btn active" data-tab="radar-view">
-      <span class="nav-icon">🛰️</span>
-      <span class="nav-label">Radar</span>
-    </button>
-    <button class="nav-btn" data-tab="routing-view">
-      <span class="nav-icon">🔀</span>
-      <span class="nav-label">Shadow Route</span>
-    </button>
-    <button class="nav-btn" data-tab="ledger-view">
-      <span class="nav-icon">📋</span>
-      <span class="nav-label">Ledger</span>
-    </button>
-    <button class="nav-btn" data-tab="verify-view">
-      <span class="nav-icon">📍</span>
-      <span class="nav-label">Log Node</span>
-    </button>
+    <!-- Floating Right Side Controls -->
+    <div class="floating-actions" id="floating-ctrls">
+      <button class="btn-start-radar" id="radar-toggle-btn" onclick="toggleRadarMode()">
+        <span id="radar-btn-text">START RADAR</span>
+      </button>
+
+      <button class="btn-circle" onclick="refreshEvasionRoute()" title="Recalculate Route">
+        <span>🔁</span>
+      </button>
+
+      <button class="btn-circle target-btn" onclick="centerVehicleLocation()" title="Center GPS">
+        <span>🎯</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <div class="nav-tab active" id="tab-radar" onclick="switchTab('radar')">
+      <span class="tab-icon">📡</span>
+      <span>Radar</span>
+    </div>
+    <div class="nav-tab tab-orange" id="tab-shadow" onclick="switchTab('shadow')">
+      <span class="tab-icon">🔀</span>
+      <span>Shadow Route</span>
+    </div>
+    <div class="nav-tab" id="tab-ledger" onclick="switchTab('ledger')">
+      <span class="tab-icon">📋</span>
+      <span>Ledger</span>
+    </div>
+    <div class="nav-tab tab-red" id="tab-log" onclick="switchTab('log')">
+      <span class="tab-icon">📍</span>
+      <span>Log Node</span>
+    </div>
   </nav>
 
-  <!-- Drawer View 1: Shadow Routing Panel -->
-  <section id="panel-routing" class="drawer-panel panel-hidden">
-    <div class="panel-header">
-      <h3>Shadow Routing Engine</h3>
-      <button class="btn-close" data-close="panel-routing">&times;</button>
-    </div>
-    <div class="panel-body">
-      <p class="panel-desc">Calculates lowest-exposure paths by penalizing roads inside active ALPR fields of view.</p>
-      
-      <div class="input-group">
-        <label>Origin</label>
-        <input type="text" id="route-start" placeholder="Current GPS Position" disabled>
-      </div>
-      <div class="input-group">
-        <label>Destination (Lat, Lon or Address)</label>
-        <input type="text" id="route-dest" placeholder="e.g. 35.4850, -97.5100">
-      </div>
+  <script>
+    // Audio Radar Synthesizer
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playPing(freq = 920, type = 'sine', duration = 0.1) {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
 
-      <div class="route-mode-selector">
-        <label class="radio-label">
-          <input type="radio" name="route-mode" value="ghost" checked>
-          <span><strong>Ghost Route</strong> (Minimum Exposure)</span>
-        </label>
-        <label class="radio-label">
-          <input type="radio" name="route-mode" value="fastest">
-          <span><strong>Fastest Route</strong> (Direct / Standard)</span>
-        </label>
-      </div>
+    // Default Coordinates (Oklahoma City Metro - Centered over Lake Stanley Draper / Downtown area)
+    let userCoords = [35.3450, -97.4350];
+    let isRadarActive = false;
+    let logNodeMode = false;
+    let userMarker = null;
 
-      <button id="btn-calculate-route" class="btn btn-primary btn-block">Generate Navigation Vectors</button>
+    // Initialize Map with High-Contrast Dark Tiles
+    const map = L.map('map', {
+      zoomControl: false,
+      attributionControl: false
+    }).setView([35.4676, -97.5164], 11);
 
-      <div id="route-results" class="route-results-hidden">
-        <div class="result-card">
-          <div class="result-row">
-            <span>Route Distance:</span>
-            <strong id="res-distance">-- mi</strong>
-          </div>
-          <div class="result-row">
-            <span>Estimated Duration:</span>
-            <strong id="res-duration">-- min</strong>
-          </div>
-          <div class="result-row">
-            <span>Predicted Camera Intercepts:</span>
-            <strong id="res-intercepts" class="text-danger">0</strong>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd'
+    }).addTo(map);
 
-  <!-- Drawer View 2: Commute Ledger Panel -->
-  <section id="panel-ledger" class="drawer-panel panel-hidden">
-    <div class="panel-header">
-      <h3>Daily Commute Ledger</h3>
-      <button class="btn-close" data-close="panel-ledger">&times;</button>
-    </div>
-    <div class="panel-body">
-      <div class="ledger-stats">
-        <div class="stat-card">
-          <span>Total Exposures</span>
-          <strong id="ledger-total-count">0</strong>
-        </div>
-        <div class="stat-card">
-          <span>Daily Grade</span>
-          <strong id="ledger-grade" class="grade-a">A+</strong>
-        </div>
-      </div>
-      <h4>Recent Capture Encounters</h4>
-      <ul id="ledger-list" class="ledger-items-list">
-        <li class="empty-state">No surveillance intercepts recorded today.</li>
-      </ul>
-      <button id="btn-clear-ledger" class="btn btn-secondary btn-block">Clear Local Ledger History</button>
-    </div>
-  </section>
+    // Prevent Map Click Conflict on Floating Controls
+    const floatControls = document.getElementById('floating-ctrls');
+    if (floatControls) {
+      L.DomEvent.disableClickPropagation(floatControls);
+      L.DomEvent.disableScrollPropagation(floatControls);
+    }
 
-  <!-- Drawer View 3: Solar-Node Verification Modal -->
-  <section id="panel-verify" class="drawer-panel panel-hidden">
-    <div class="panel-header">
-      <h3>Solar-Node Verification Protocol</h3>
-      <button class="btn-close" data-close="panel-verify">&times;</button>
-    </div>
-    <div class="panel-body">
-      <p class="panel-desc">Pin and authenticate a physical camera installation to the local mesh database.</p>
+    // User Location Puck (Blue Triangle Directional Pointer)
+    const puckIcon = L.divIcon({
+      className: 'user-puck-wrapper',
+      html: '<div class="user-arrow-puck" id="user-arrow"></div>',
+      iconSize: [20, 20]
+    });
+    userMarker = L.marker(userCoords, { icon: puckIcon }).addTo(map);
 
-      <div class="input-group">
-        <label>Hardware Signature</label>
-        <select id="node-hardware">
-          <option value="Flock Falcon (Solar Pole)">Flock Falcon (Solar Pole)</option>
-          <option value="Flock Raven (Acoustic + Optical)">Flock Raven (Acoustic + Optical)</option>
-          <option value="Motorola Vigilant ALPR">Motorola / Vigilant Fixed ALPR</option>
-          <option value="Municipal Gantry Camera">Overhead Municipal Gantry</option>
-          <option value="Mobile Cruiser Mounted">Mobile Cruiser ALPR Bar</option>
-        </select>
-      </div>
+    // Generate 134 Realistic Camera Clusters Across Oklahoma City Metro (Bethany, Downtown, Midwest City, Moore)
+    const cameraLocations = [];
+    const basePoints = [
+      { lat: 35.4676, lng: -97.5164, count: 48, spread: 0.055 }, // Downtown OKC
+      { lat: 35.5053, lng: -97.6406, count: 26, spread: 0.035 }, // Bethany
+      { lat: 35.4495, lng: -97.3967, count: 28, spread: 0.038 }, // Midwest City
+      { lat: 35.3395, lng: -97.4867, count: 32, spread: 0.032 }  // Moore
+    ];
 
-      <div class="input-group">
-        <label>Camera Lens Direction (Facing Heading)</label>
-        <select id="node-heading">
-          <option value="0">North (0°)</option>
-          <option value="45">North-East (45°)</option>
-          <option value="90">East (90°)</option>
-          <option value="135">South-East (135°)</option>
-          <option value="180">South (180°)</option>
-          <option value="225">South-West (225°)</option>
-          <option value="270">West (270°)</option>
-          <option value="315">North-West (315°)</option>
-        </select>
-      </div>
+    basePoints.forEach(bp => {
+      for (let i = 0; i < bp.count; i++) {
+        const offsetLat = (Math.random() - 0.5) * bp.spread * 2;
+        const offsetLng = (Math.random() - 0.5) * bp.spread * 2;
+        cameraLocations.push({
+          lat: bp.lat + offsetLat,
+          lng: bp.lng + offsetLng,
+          id: `ALPR-${Math.floor(1000 + Math.random() * 9000)}`
+        });
+      }
+    });
 
-      <div class="input-group">
-        <label>Capture Cone Angle (FOV Degrees)</label>
-        <input type="number" id="node-fov" value="60" min="30" max="120">
-      </div>
+    // Render Camera Rings
+    const cameraIcon = L.divIcon({
+      className: 'cam-marker-wrapper',
+      html: '<div class="camera-glow-marker"><div class="camera-glow-core"></div></div>',
+      iconSize: [22, 22]
+    });
 
-      <div class="input-group">
-        <label>Capture Range (Feet)</label>
-        <input type="number" id="node-range" value="400" min="50" max="1000">
-      </div>
+    const cameraLayerGroup = L.layerGroup().addTo(map);
 
-      <div class="input-group">
-        <label>Location Target</label>
-        <select id="node-coords-mode">
-          <option value="current">Current GPS Coordinates</option>
-          <option value="center">Map Center Point</option>
-        </select>
-      </div>
+    function renderCameraNodes() {
+      cameraLayerGroup.clearLayers();
+      cameraLocations.forEach(cam => {
+        L.marker([cam.lat, cam.lng], { icon: cameraIcon })
+          .bindPopup(`<b>${cam.id}</b><br><span style="color:#ef4444;font-weight:bold;">Flock ALPR Surveillance Node</span>`)
+          .addTo(cameraLayerGroup);
+      });
+      document.getElementById('stat-cameras').innerText = cameraLocations.length;
+    }
+    renderCameraNodes();
 
-      <button id="btn-submit-node" class="btn btn-primary btn-block">Authenticate & Add to Node Mesh</button>
-    </div>
-  </section>
+    // Live Geolocation
+    if ("geolocation" in navigator) {
+      navigator.geolocation.watchPosition(
+        (pos) => {
+          userCoords = [pos.coords.latitude, pos.coords.longitude];
+          userMarker.setLatLng(userCoords);
 
-  <!-- Quick Floating Action Buttons -->
-  <div id="quick-controls">
-    <button id="btn-toggle-radar" class="fab btn-radar-start" title="Toggle Live Radar">START RADAR</button>
-    <button id="btn-sync-mesh" class="fab fab-icon" title="Sync OpenStreetMap / DeFlock Mesh">🔄</button>
-    <button id="btn-recenter" class="fab fab-icon" title="Recenter Location">🎯</button>
-  </div>
+          let speed = 0;
+          if (pos.coords.speed && pos.coords.speed > 0) {
+            speed = Math.round(pos.coords.speed * 2.23694);
+          }
+          document.getElementById('stat-speed').innerHTML = `${speed} <span style="font-size:0.65rem;">MPH</span>`;
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+          if (pos.coords.heading !== null && !isNaN(pos.coords.heading)) {
+            const h = Math.round(pos.coords.heading);
+            document.getElementById('stat-heading').innerHTML = `${h}° <span style="font-size:0.65rem;">DIR</span>`;
+            const arrow = document.getElementById('user-arrow');
+            if (arrow) arrow.style.transform = `rotate(${h}deg)`;
+          }
+
+          if (isRadarActive) {
+            checkRadarProximity(userCoords);
+          }
+        },
+        (err) => console.log("GPS Location unavailable:", err.message),
+        { enableHighAccuracy: true, maximumAge: 2000, timeout: 10000 }
+      );
+    }
+
+    function checkRadarProximity(pos) {
+      cameraLocations.forEach(cam => {
+        const d = map.distance(pos, [cam.lat, cam.lng]);
+        if (d < 180) { // Near camera
+          playPing(440, 'sawtooth', 0.15);
+        }
+      });
+    }
+
+    function toggleRadarMode() {
+      isRadarActive = !isRadarActive;
+      const btn = document.getElementById('radar-toggle-btn');
+      const text = document.getElementById('radar-btn-text');
+
+      if (isRadarActive) {
+        btn.classList.add('active');
+        text.innerText = "RADAR ACTIVE";
+        playPing(880, 'sine', 0.2);
+      } else {
+        btn.classList.remove('active');
+        text.innerText = "START RADAR";
+      }
+    }
+
+    function centerVehicleLocation() {
+      if (userMarker) {
+        map.panTo(userCoords, { animate: true, duration: 0.5 });
+        map.setZoom(13);
+        playPing(1100, 'sine', 0.1);
+      }
+    }
+
+    function refreshEvasionRoute() {
+      playPing(1200, 'triangle', 0.18);
+      alert("GhostLane: Recalculating zero-trace shadow vectors around active surveillance clusters.");
+    }
+
+    // Tap Map to Add Camera when Log Node Tab is Active
+    map.on('click', function(e) {
+      if (logNodeMode) {
+        cameraLocations.push({
+          lat: e.latlng.lat,
+          lng: e.latlng.lng,
+          id: `FLOCK-${Math.floor(1000 + Math.random() * 9000)}`
+        });
+        renderCameraNodes();
+        playPing(800, 'square', 0.12);
+        alert("Optical surveillance node logged to local mesh.");
+      }
+    });
+
+    // Tab Navigation Switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+
+      logNodeMode = (tabId === 'log');
+
+      if (tabId === 'shadow') {
+        alert("Shadow Route Mode: Auto-evasion active across all 134 grid nodes.");
+      } else if (tabId === 'ledger') {
+        alert(`Surveillance Ledger: ${cameraLocations.length} optical traps currently cataloged.`);
+      } else if (tabId === 'log') {
+        alert("Log Node Mode: Tap anywhere on the map to mark a new camera.");
+      }
+    }
+  </script>
 </body>
 </html>
